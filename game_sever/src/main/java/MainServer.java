@@ -1,4 +1,5 @@
 import io.netty.bootstrap.ServerBootstrap;
+import io.netty.channel.ChannelFuture;
 import io.netty.channel.ChannelInitializer;
 import io.netty.channel.EventLoopGroup;
 import io.netty.channel.nio.NioEventLoopGroup;
@@ -26,6 +27,7 @@ public class MainServer {
         EventLoopGroup wGroup = new NioEventLoopGroup();
 
         try {
+
             ServerBootstrap serverBootstrap = new ServerBootstrap();
             serverBootstrap.group(bGroup, wGroup)
                     /*
@@ -33,7 +35,8 @@ public class MainServer {
                      */
                     .channel(NioServerSocketChannel.class)
                     /*
-                    添加子处理器
+                    添加子处理器，
+                    在这里，addLast里面的对象都是ChannelHandler的实现
                      */
                     .childHandler(new ChannelInitializer<SocketChannel>() {
                         @Override
@@ -57,7 +60,9 @@ public class MainServer {
                                     new MsgHandler());
                         }
                     });
-
+            LOGGER.info("bind port");
+            ChannelFuture f = serverBootstrap.bind(PROT).sync();
+            f.channel().closeFuture().sync();
         } catch (Exception e) {
             LOGGER.error(e.getMessage(), e);
         } finally {
@@ -65,5 +70,12 @@ public class MainServer {
             wGroup.shutdownGracefully();
         }
 
+    }
+
+
+    public static void main(String[] args) {
+        LOGGER.info("main");
+        MainServer server = new MainServer();
+        server.start();
     }
 }

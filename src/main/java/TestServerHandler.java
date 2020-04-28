@@ -1,16 +1,16 @@
 import io.netty.buffer.ByteBuf;
 import io.netty.channel.ChannelHandlerContext;
 import io.netty.channel.ChannelInboundHandlerAdapter;
-import io.netty.util.ReferenceCountUtil;
+import io.netty.handler.codec.http.websocketx.BinaryWebSocketFrame;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
 /**
  *  处理服务端channel
  */
-public class DiscardServerHandler extends ChannelInboundHandlerAdapter {
+public class TestServerHandler extends ChannelInboundHandlerAdapter {
 
-    private static final Logger LOGGER = LoggerFactory.getLogger(DiscardServerHandler.class);
+    private static final Logger LOGGER = LoggerFactory.getLogger(TestServerHandler.class);
 
     /**
      * 处理从client发送过来的数据
@@ -21,8 +21,7 @@ public class DiscardServerHandler extends ChannelInboundHandlerAdapter {
      */
     @Override
     public void channelRead(ChannelHandlerContext ctx, Object msg) throws Exception {
-        LOGGER.debug("msg is {}", msg);
-        ((ByteBuf) msg).release();
+        LOGGER.info("msg is {}", msg);
     }
 
     @Override

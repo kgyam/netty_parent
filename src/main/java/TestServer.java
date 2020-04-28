@@ -1,24 +1,28 @@
 import io.netty.bootstrap.ServerBootstrap;
 import io.netty.channel.ChannelFuture;
 import io.netty.channel.ChannelInitializer;
-import io.netty.channel.ChannelOption;
 import io.netty.channel.EventLoopGroup;
 import io.netty.channel.nio.NioEventLoopGroup;
 import io.netty.channel.socket.SocketChannel;
 import io.netty.channel.socket.nio.NioServerSocketChannel;
+import io.netty.handler.codec.LengthFieldBasedFrameDecoder;
+import io.netty.handler.codec.LengthFieldPrepender;
+import io.netty.handler.codec.string.StringDecoder;
+import io.netty.handler.codec.string.StringEncoder;
+import io.netty.util.CharsetUtil;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
-public class DiscardServer {
+public class TestServer {
 
-    private static final int PROT = 1234;
-    private static final Logger LOGGER = LoggerFactory.getLogger(DiscardServer.class);
+    private static final int PROT = 8088;
+    private static final Logger LOGGER = LoggerFactory.getLogger(TestServer.class);
 
-    public DiscardServer() {
+    public TestServer() {
     }
 
 
-    public void run(){
+    public void run() {
         EventLoopGroup boss = new NioEventLoopGroup();
         EventLoopGroup worker = new NioEventLoopGroup();
 
@@ -27,29 +31,30 @@ public class DiscardServer {
             serverBootstrap.group(boss, worker)
                     .channel(NioServerSocketChannel.class)
                     .childHandler(new ChannelInitializer<SocketChannel>() {
+                        @Override
                         protected void initChannel(SocketChannel socketChannel) throws Exception {
-                            socketChannel.pipeline().addLast(new DiscardServerHandler());
+                            socketChannel.pipeline()
+                                    .addLast(new StringDecoder(CharsetUtil.UTF_8))
+                                    .addLast(new StringEncoder(CharsetUtil.UTF_8))
+                                    .addLast(new TestServerHandler());
                         }
-                    }).option(ChannelOption.SO_BACKLOG, 128)
-                    .childOption(ChannelOption.SO_KEEPALIVE, true);
-
+                    });
+            LOGGER.info("bind");
             ChannelFuture cf = serverBootstrap.bind(PROT).sync();
-
             cf.channel().closeFuture().sync();
         } catch (Exception e) {
             LOGGER.error(e.getMessage());
         } finally {
+            LOGGER.info("finally");
             boss.shutdownGracefully();
             worker.shutdownGracefully();
-
         }
 
     }
 
 
-
     public static void main(String[] args) {
 
-        new DiscardServer().run();
+        new TestServer().run();
     }
 }
